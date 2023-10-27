@@ -1,6 +1,6 @@
 # Esp32-TCP
 
-### Codigo no probado pero compila
+### Codigo  probado que funciona
 ```c++
 #include <Arduino.h>
 #include <WiFi.h>
@@ -8,8 +8,8 @@
 #include <vector>
 
 const char *ssid = "Wifi Home";
-const char *password = "contra";
-const IPAddress serverIP(192,168,0,2); //欲访问的地址
+const char *password = "S4m4sw3n0s"; //192.168.100.16 laptop
+const IPAddress serverIP(192,168,100,16); //欲访问的地址
 uint16_t serverPort = 8080;
 
 #define maxcache 1430
@@ -166,4 +166,64 @@ void loop()
     }
     delay(10000);
 }
+```
+
+### Codigo en Python
+```python
+import socket
+import threading
+import time
+import numpy as np
+import cv2
+
+begin_data = b'Frame Begin'
+end_data = b'Frame Over'
+
+#接收数据
+# ESP32发送一张照片的流程
+# 先发送Frame Begin 表示开始发送图片 然后将图片数据分包发送 每次发送1430 余数最后发送
+# 完毕后发送结束标志 Frame Over 表示一张图片发送完毕
+# 1430 来自ESP32cam发送的一个包大小为1430 接收到数据 data格式为b&#39;&#39;
+def handle_sock(sock, addr):
+    temp_data = b''#61; b&#39;&#39;
+    t1 = int(round(time.time() * 1000))
+    while True:
+        data = sock.recv(1430)
+        # 如果这一帧数据包的开头是 b&#39;Frame Begin&#39; 则是一张图片的开始
+        if data[0:len(begin_data)] == begin_data:
+            # 将这一帧数据包的开始标志信息&#xff08;b&#39;Frame Begin&#39;&#xff09;清除   因为他不属于图片数据
+            data = data[len(begin_data):len(data)]
+            # 判断这一帧数据流是不是最后一个帧 最后一针数据的结尾时b&#39;Frame Over&#39;
+            while data[-len(end_data):] != end_data:
+                temp_data = temp_data + data  # 不是结束的包 讲数据添加进temp_data
+                data = sock.recv(1430)# 继续接受数据 直到接受的数据包包含b&#39;Frame Over&#39; 表示是这张图片的最后一针
+            # 判断为最后一个包 将数据去除 结束标志信息 b&#39;Frame Over&#39;
+            temp_data = temp_data + data[0:(len(data) - len(end_data))]  # 将多余的&#xff08;\r\nFrame Over&#xff09;去掉 其他放入temp_data
+            # 显示图片
+            receive_data = np.frombuffer(temp_data, dtype = 'uint8')  # 将获取到的字符流数据转换成1维数组
+            r_img = cv2.imdecode(receive_data, cv2.IMREAD_COLOR)  # 将数组解码成图像
+            r_img = r_img.reshape(480, 640, 3)
+            t2 = int(round(time.time() * 1000))
+            fps = 1000//(t2-t1) #duda si esta bien o se borra los comentarios
+            cv2.putText(r_img, 'FPS' + str(fps), (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+            cv2.imshow('server_frame', r_img)
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+            t1 = t2
+            print('接收到的数据包大小' + str(len(temp_data)))  # 显示该张照片数据大小
+            temp_data = b'' #39;&#39;  # 清空数据 便于下一章照片使用
+
+server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server.bind(('192.168.100.16', 8080)) #192.168.100.16 laptop -- #esp32 192.168.100.95 
+server.listen(5)
+CONNECTION_LIST = []
+
+#主线程循环接收客户端连接
+while True:
+    sock, addr = server.accept()
+    CONNECTION_LIST.append(sock)
+    print('Connect--{}'.format(addr))
+    #连接成功后开一个线程用于处理客户端
+    client_thread = threading.Thread(target=handle_sock, args=(sock, addr))
+    client_thread.start()
 ```
