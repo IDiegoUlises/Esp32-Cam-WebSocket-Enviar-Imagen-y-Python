@@ -229,7 +229,7 @@ while True:
 ```
 
 ### CODIGO CREADO CON INTELIGENCIA ARTIFICIAL QUE FUNCIONA
-### ESP32 CODIGO
+### Esp32 codigo
 
 ```C++
 // Incluir las librerías necesarias
@@ -372,6 +372,7 @@ void loop() {
 }
 ```
 
+### Codigo en python servidor
 ```python
 import socket
 
