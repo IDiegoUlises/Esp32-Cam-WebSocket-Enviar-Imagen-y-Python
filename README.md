@@ -151,7 +151,7 @@ import socket
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 # Asigna una dirección y un puerto al socket
-server_address = ('192.168.100.16', 8080)
+server_address = ('192.168.1.16', 8080)
 server_socket.bind(server_address)
 
 # Escucha las conexiones entrantes
@@ -159,9 +159,6 @@ server_socket.listen()
 
 # Acepta la conexión entrante
 client_socket, client_address = server_socket.accept()
-
-# Recibe los datos enviados por el cliente
-#data = client_socket.recv(1024)
 
 # Recibe los datos enviados por el cliente
 data = b'' # Crea un buffer vacío para almacenar los datos
@@ -172,7 +169,7 @@ while True:
     data += chunk # Añade el trozo al buffer
 
 # Guarda los datos recibidos en un archivo de imagen
-with open('image.png', 'wb') as f:
+with open('imagen.png', 'wb') as f:
     f.write(data)
 
 
