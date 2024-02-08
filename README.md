@@ -1,6 +1,6 @@
 # Esp32 TCP
 
-### Esp32 codigo
+### Codigo Esp32 Cliente
 
 ```C++
 // Incluir las librerías necesarias
@@ -143,7 +143,7 @@ void loop() {
 }
 ```
 
-### Codigo en python servidor
+### Codigo en Python Servidor
 ```python
 import socket
 
