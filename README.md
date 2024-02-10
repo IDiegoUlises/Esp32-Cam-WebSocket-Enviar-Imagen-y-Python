@@ -179,6 +179,7 @@ server_socket.close()
 ```
 
 # Codigo 2 en fases de pruebas
+lo que hace se comporta como un servidor recibe la imagen luego recibe el mensaje EOT(IMPORTANTE SIN ESTO NO FUNCIONA) luego tiene que borrar el mensaje EOT que se recibe en caso de no borrarla al escribir la imagen al abrirla se mostrata como dañada
 ```python
 import socket
 import io
@@ -224,6 +225,7 @@ s.close()
 ```
 
 ### Codigo de arduino
+Este codigo captura una foto de la camara, desactiva la brown out para evitar problemas luego captura la foto la envia por socket y envia un mensaje EOT(IMPORTANTE) y cierra la conexion
 ```c++
 // Incluir las librerías necesarias
 #include "esp_camera.h"
