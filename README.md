@@ -854,6 +854,9 @@ const char* password = "S4m4sw3n0s";
 #define HREF_GPIO_NUM     23
 #define PCLK_GPIO_NUM     22
 
+//Investigar para que sirve al parecer para web puerto 80
+WebSocketsServer webSocket = WebSocketsServer(80);
+
 void ConectarWifi()
 {
   //Iniciar la conexión Wi-Fi
@@ -911,6 +914,97 @@ void ConfigurarCamara()
   }
 }
 
+//Al parecer es un evento de subrutina
+// Called when receiving any WebSocket message
+void onWebSocketEvento(uint8_t num,
+                       WStype_t type,
+                       uint8_t * payload,
+                       size_t length) {
+
+  // Figure out the type of WebSocket event
+  switch (type)
+  {
+    // Client has disconnected
+    case WStype_DISCONNECTED:
+      Serial.printf("[%u] Disconnected!\n", num);
+      break;
+
+    // New client has connected
+    case WStype_CONNECTED:
+      {
+        IPAddress ip = webSocket.remoteIP(num);
+        Serial.printf("[%u] Connection from ", num);
+        Serial.println(ip.toString());
+
+        //Experimental se supone que cuando se conecta
+        //un cliente pasa a esto
+        camera_fb_t * fb = NULL;
+        fb = esp_camera_fb_get(); // get image... part of work-around to get latest image
+        esp_camera_fb_return(fb); // return fb... part of work-around to get latest image
+
+        fb = NULL;
+        fb = esp_camera_fb_get(); // get fresh image
+        size_t fbsize = fb->len;
+        Serial.println(fbsize);
+        Serial.println("Image captured. Returning frame buffer data.");
+        webSocket.sendBIN(num, fb->buf, fbsize);
+        esp_camera_fb_return(fb);
+        Serial.println("Done");
+      }
+      break;
+
+    // Echo text message back to client
+    case WStype_TEXT:
+      Serial.printf("[%u] Text: %s\n", num, payload);
+      Serial.println((char*)payload);
+
+      //Cuando se recibe el mensaje capture
+      /*
+        if (String((char*)payload) == "capture")
+        {
+        Serial.println("Capture Command Received - capturing frame");
+
+        camera_fb_t * fb = NULL;
+        fb = esp_camera_fb_get(); // get image... part of work-around to get latest image
+        esp_camera_fb_return(fb); // return fb... part of work-around to get latest image
+
+        fb = NULL;
+        fb = esp_camera_fb_get(); // get fresh image
+        size_t fbsize = fb->len;
+        Serial.println(fbsize);
+        Serial.println("Image captured. Returning frame buffer data.");
+        webSocket.sendBIN(num, fb->buf, fbsize);
+        esp_camera_fb_return(fb);
+        Serial.println("Done");
+        }
+
+        else
+        {
+        webSocket.sendTXT(num, payload);
+        }
+      */
+      break;
+
+    // For everything else: do nothing
+    case WStype_BIN:
+    // Serial.printf("[%u] get binary length: %u\n", num, length);
+    // hexdump(payload, length);
+
+    // send message to client
+    // webSocket.sendBIN(num, payload, length);
+    // break;
+    case WStype_ERROR:
+    case WStype_FRAGMENT_TEXT_START:
+    case WStype_FRAGMENT_BIN_START:
+    case WStype_FRAGMENT:
+    case WStype_FRAGMENT_FIN:
+    default:
+      break;
+  }
+}
+
+
+
 
 void setup()
 {
@@ -919,13 +1013,18 @@ void setup()
 
   //Configura la camara
   ConfigurarCamara()
-  
+
   //Funcion establecer conexion WiFi
   ConectarWifi()
+
+  // Start WebSocket server and assign callback
+  webSocket.begin();
+  webSocket.onEvent(WebSocketEvento);
 }
 
 void loop()
 {
-
+  // Look for and handle WebSocket data
+  webSocket.loop();
 }
 ```
