@@ -916,7 +916,7 @@ void ConfigurarCamara()
 
 //Al parecer es un evento de subrutina
 // Called when receiving any WebSocket message
-void onWebSocketEvento(uint8_t num,
+void WebSocketEvento(uint8_t num,
                        WStype_t type,
                        uint8_t * payload,
                        size_t length) {
