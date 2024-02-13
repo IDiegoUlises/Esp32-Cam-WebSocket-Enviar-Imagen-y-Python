@@ -823,3 +823,52 @@ async def ws_client():
 asyncio.run(ws_client())
 # Start the connection
 ```
+
+# Codigo anterior de web socket server pero en desarollo porque se intenta optimizar EXPERIMENTAL
+
+### Esp32 Cam 
+```c++
+#include <WiFi.h>
+#include <WebSocketsServer.h>
+#include "esp_camera.h"
+
+//Credenciales WiFi
+const char* ssid     = "Wifi Home 2.4G";  
+const char* password = "S4m4sw3n0s";
+
+void ConectarWifi()
+{
+  //Iniciar la conexión Wi-Fi
+  WiFi.begin(ssid, password);
+  Serial.print("Conectando ");
+  Serial.println(ssid);
+
+  // Esperar hasta que la conexión sea exitosa
+  while (WiFi.status() != WL_CONNECTED) 
+  {
+    delay(500);
+    Serial.print(".");
+  }
+
+  // Mostrar la dirección IP asignada
+  Serial.println("");
+  Serial.println("WiFi conectado.");
+  Serial.println("IP Direccion: ");
+  Serial.println(WiFi.localIP());
+}
+
+
+void setup()
+{
+  //Inicia el puerto serial
+  Serial.begin(115200);
+
+  //Funcion establecer conexion WiFi
+  ConectarWifi()
+}
+
+void loop()
+{
+
+}
+```
