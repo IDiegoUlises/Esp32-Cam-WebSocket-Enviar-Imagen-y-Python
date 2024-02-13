@@ -374,7 +374,7 @@ void loop() {
 }
 ```
 
-# NUEVO CODIGO PORQUE LO ANTERIOR FALLO TODO ESTE CODIGO UTILIZA WEBSERVER y funciona
+# NUEVO CODIGO PORQUE LO ANTERIOR FALLO TODO ESTE CODIGO UTILIZA WEBSERVER y funciona pero con algunos detalles la resolucion es muy baja y solo se puede ver la imagen es escala de grises
 
 ### Codigo arduino
 ```c++
