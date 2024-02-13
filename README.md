@@ -1012,10 +1012,10 @@ void setup()
   Serial.begin(115200);
 
   //Configura la camara
-  ConfigurarCamara()
+  ConfigurarCamara();
 
   //Funcion establecer conexion WiFi
-  ConectarWifi()
+  ConectarWifi();
 
   // Start WebSocket server and assign callback
   webSocket.begin();
