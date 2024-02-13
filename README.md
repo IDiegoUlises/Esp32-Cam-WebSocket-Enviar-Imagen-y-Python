@@ -608,3 +608,218 @@ while(1):
 # Gracefully close WebSocket connection
 ws.close()
 ```
+# Nuevo codigo mejorado pero no optimizado pero funciona esp32 envia la foto por web socket y el cliente python recibe la foto a color con una buena resolucion
+
+### Esp32 Cam Codigo
+```C++
+#include "esp_camera.h"
+#include <WiFi.h>
+#include <WebSocketsServer.h>
+
+// Select camera model
+#define CAMERA_MODEL_WROVER_KIT // Has PSRAM
+#include "esp_camera.h"
+
+const char* ssid     = "Wifi Home 2.4G";     // input your wifi name
+const char* password = "S4m4sw3n0s";   // input your wifi passwords
+
+// Definir los pines del módulo ESP32 CAM
+#define PWDN_GPIO_NUM     32
+#define RESET_GPIO_NUM    -1
+#define XCLK_GPIO_NUM      0
+#define SIOD_GPIO_NUM     26
+#define SIOC_GPIO_NUM     27
+#define Y9_GPIO_NUM       35
+#define Y8_GPIO_NUM       34
+#define Y7_GPIO_NUM       39
+#define Y6_GPIO_NUM       36
+#define Y5_GPIO_NUM       21
+#define Y4_GPIO_NUM       19
+#define Y3_GPIO_NUM       18
+#define Y2_GPIO_NUM        5
+#define VSYNC_GPIO_NUM    25
+#define HREF_GPIO_NUM     23
+#define PCLK_GPIO_NUM     22
+
+
+// Globals
+WebSocketsServer webSocket = WebSocketsServer(80);
+ 
+// Called when receiving any WebSocket message
+void onWebSocketEvent(uint8_t num,
+                      WStype_t type,
+                      uint8_t * payload,
+                      size_t length) {
+
+  // Figure out the type of WebSocket event
+  switch(type) {
+
+    // Client has disconnected
+    case WStype_DISCONNECTED:
+      Serial.printf("[%u] Disconnected!\n", num);
+      break;
+
+    // New client has connected
+    case WStype_CONNECTED:
+      {
+        IPAddress ip = webSocket.remoteIP(num);
+        Serial.printf("[%u] Connection from ", num);
+        Serial.println(ip.toString());
+      }
+      break;
+
+    // Echo text message back to client
+    case WStype_TEXT:
+      Serial.printf("[%u] Text: %s\n", num, payload);
+      Serial.println((char*)payload);
+
+      if (String((char*)payload) == "capture")
+      {
+        Serial.println("Capture Command Received - capturing frame");
+
+        camera_fb_t * fb = NULL;
+        fb = esp_camera_fb_get(); // get image... part of work-around to get latest image
+        esp_camera_fb_return(fb); // return fb... part of work-around to get latest image
+        
+        fb = NULL;
+        fb = esp_camera_fb_get(); // get fresh image
+        size_t fbsize = fb->len;
+        Serial.println(fbsize);
+        Serial.println("Image captured. Returning frame buffer data.");
+        webSocket.sendBIN(num, fb->buf, fbsize);
+        esp_camera_fb_return(fb);
+        Serial.println("Done");
+      } else
+      {
+        webSocket.sendTXT(num, payload);
+      }
+      break;
+
+    // For everything else: do nothing
+    case WStype_BIN:
+     // Serial.printf("[%u] get binary length: %u\n", num, length);
+     // hexdump(payload, length);
+
+      // send message to client
+      // webSocket.sendBIN(num, payload, length);
+     // break;
+    case WStype_ERROR:
+    case WStype_FRAGMENT_TEXT_START:
+    case WStype_FRAGMENT_BIN_START:
+    case WStype_FRAGMENT:
+    case WStype_FRAGMENT_FIN:
+    default:
+      break;
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+  Serial.setDebugOutput(true);
+  Serial.println("Connecting...");
+
+  camera_config_t config;
+  config.ledc_channel = LEDC_CHANNEL_0;
+  config.ledc_timer = LEDC_TIMER_0;
+  config.pin_d0 = Y2_GPIO_NUM;
+  config.pin_d1 = Y3_GPIO_NUM;
+  config.pin_d2 = Y4_GPIO_NUM;
+  config.pin_d3 = Y5_GPIO_NUM;
+  config.pin_d4 = Y6_GPIO_NUM;
+  config.pin_d5 = Y7_GPIO_NUM;
+  config.pin_d6 = Y8_GPIO_NUM;
+  config.pin_d7 = Y9_GPIO_NUM;
+  config.pin_xclk = XCLK_GPIO_NUM;
+  config.pin_pclk = PCLK_GPIO_NUM;
+  config.pin_vsync = VSYNC_GPIO_NUM;
+  config.pin_href = HREF_GPIO_NUM;
+  config.pin_sscb_sda = SIOD_GPIO_NUM;
+  config.pin_sscb_scl = SIOC_GPIO_NUM;
+  config.pin_pwdn = PWDN_GPIO_NUM;
+  config.pin_reset = RESET_GPIO_NUM;
+  config.xclk_freq_hz = 20000000;
+  config.pixel_format = PIXFORMAT_JPEG;
+  
+  // if PSRAM IC present, init with UXGA resolution and higher JPEG quality
+  //                      for larger pre-allocated frame buffer.
+  //if(psramFound()){
+  //  config.frame_size = FRAMESIZE_UXGA;
+  //  config.jpeg_quality = 10;
+  //  config.fb_count = 2;
+  //} else {
+  config.frame_size = FRAMESIZE_SVGA; //FRAMESIZE_96X96; //FRAMESIZE_QQVGA; //FRAMESIZE_SVGA;
+  config.jpeg_quality = 10;
+  config.fb_count = 1;
+  //}
+
+  // camera init
+  esp_err_t err = esp_camera_init(&config);
+  if (err != ESP_OK) {
+    Serial.printf("Msg: Camera init failed with error 0x%x", err);
+    return;
+  }
+
+  sensor_t * s = esp_camera_sensor_get();
+  // drop down frame size for higher initial frame rate
+  s->set_framesize(s, FRAMESIZE_SVGA);
+
+  WiFi.begin(ssid, password);
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("");
+  Serial.println("WiFi connected");
+
+  Serial.print("Msg: Camera Ready! Use 'http://");
+  Serial.print(WiFi.localIP());
+  Serial.println("' to connect");
+
+  // Start WebSocket server and assign callback
+  webSocket.begin();
+  webSocket.onEvent(onWebSocketEvent);
+}
+
+void loop() {
+  // Look for and handle WebSocket data
+  webSocket.loop();
+}
+```
+
+### Python cliente codigo
+```python
+import websockets
+import asyncio
+import aiofiles
+
+# The main function that will handle connection and communication
+# with the server
+async def ws_client():
+    print("WebSocket: Client Connected.")
+    # Connect to the server
+        name = input("capture or exit: ")
+    url = "ws://192.168.1.3:80"
+    async with websockets.connect(url) as ws:
+
+        if name == 'exit':
+            exit()
+
+        #age = input("Your Age: ")
+        # Send values to the server
+        await ws.send(f"{name}")
+        #await ws.send(f"{age}")
+
+        # Stay alive forever, listen to incoming msgs
+        while True:
+            # Receive binary data
+            data = await ws.recv()
+            # Save the binary data to a file
+            async with aiofiles.open('received_image.jpg', 'wb') as out_file:
+                await out_file.write(data)
+            print("Image received and saved.")
+            break
+
+asyncio.run(ws_client())
+# Start the connection
+```
