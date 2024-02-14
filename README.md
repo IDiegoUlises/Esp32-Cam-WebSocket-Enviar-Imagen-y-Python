@@ -199,7 +199,7 @@ async def ws_client():
 #Empieza la conexion
 asyncio.run(ws_client())
 ```
-### Librerias Necesarias Para Python
+### Librerias
 * ``` pip install websockets ```
 * ``` pip install aiofiles ```
 
