@@ -1,6 +1,4 @@
-# Esp32 TCP
-
-# Codigo anterior de web socket server pero en desarollo porque se intenta optimizar EXPERIMENTAL
+# Esp32 Web Socket Como Servidor Envia una imagen a un Cliente Python
 
 ### Esp32 Cam 
 ```c++
