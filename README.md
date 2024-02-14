@@ -1,5 +1,8 @@
 # Esp32 Web Socket Como Servidor Envia una imagen a un Cliente Python
 
+### Librerias
+<img src="https://github.com/IDiegoUlises/Esp32-Cam-WebSocket-Enviar-Imagen-y-Python/blob/main/imagenes/WebSocketsLibreriaEnEsp32.png" />
+
 ### Esp32 Cam 
 ```c++
 #include <WiFi.h>
