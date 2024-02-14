@@ -949,6 +949,13 @@ void WebSocketEvento(uint8_t num,
     case WStype_TEXT:
       Serial.printf("En el caso de recibir un mensaje de texto", num, payload);
       Serial.println((char*)payload);
+
+      /* Descomentar estas lineas en caso que al recibir un mensaje especifico del cliente se necesite realizar una accion
+        if (String((char*)payload) == "Texto")
+        {
+        //Accion a ejecutar
+        }
+      */
       break;
 
     //En el caso de recibir datos en binario del cliente
