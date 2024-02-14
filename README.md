@@ -12,8 +12,8 @@
 #include "esp_camera.h"
 
 //Credenciales WiFi
-const char* ssid     = "Wifi Home 2.4G";
-const char* password = "S4m4sw3n0s";
+const char* ssid     = "WiFi";
+const char* password = "password";
 
 //Definir los pines del módulo ESP32 CAM
 #define PWDN_GPIO_NUM     32
