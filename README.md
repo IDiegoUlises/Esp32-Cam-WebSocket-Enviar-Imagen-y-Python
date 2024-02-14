@@ -995,3 +995,33 @@ void loop()
   webSocket.loop();
 }
 ```
+
+### Codigo en Python
+```python
+import websockets
+import asyncio
+import aiofiles
+
+#Funcion principal que tiene el manejador handle y realiza la comunicacion
+async def ws_client():
+    print("WebSocket: Cliente conectado.")
+    
+    #Direccion IP del cliente y el puerto asignado
+    url = "ws://192.168.1.3:80"
+
+    #Es una funcion asincrona que establece una conexión a un servidor WebSocket en la URL proporcionada
+    async with websockets.connect(url) as ws:
+
+        #Escucha los mensajes entrantes
+        while True:
+            #Recibe los datos
+            data = await ws.recv()
+            #Guarda los datos de forma asincrona en binario en un archivo jpg
+            async with aiofiles.open('imagen.jpg', 'wb') as out_file:
+                await out_file.write(data)
+            print("imagen guardada con exito.")
+            break
+
+#Empieza la conexion
+asyncio.run(ws_client())
+```
