@@ -854,7 +854,8 @@ const char* password = "S4m4sw3n0s";
 #define HREF_GPIO_NUM     23
 #define PCLK_GPIO_NUM     22
 
-//Investigar para que sirve al parecer para web puerto 80
+//Crea una instancia del servidor WebSocket en el puerto 80
+//Esto significa que el ESP32 está listo para recibir conexiones WebSocket en ese puerto
 WebSocketsServer webSocket = WebSocketsServer(80);
 
 void ConectarWifi()
@@ -914,85 +915,45 @@ void ConfigurarCamara()
   }
 }
 
-//Al parecer es un evento de subrutina
-// Called when receiving any WebSocket message
+//Una funcion que define que se ejecuta cuando sucede un evento
 void WebSocketEvento(uint8_t num,
-                       WStype_t type,
-                       uint8_t * payload,
-                       size_t length) {
+                     WStype_t type,
+                     uint8_t * payload,
+                     size_t length) {
 
-  // Figure out the type of WebSocket event
+  //Se ejecuta dependiento de los eventos del WebSocket
   switch (type)
   {
-    // Client has disconnected
+    //Cuando un cliente se desconecta
     case WStype_DISCONNECTED:
-      Serial.printf("[%u] Disconnected!\n", num);
+      Serial.println("Cliente desconectado", num);
       break;
 
-    // New client has connected
+    //Se ejecuta cuando un cliente se conecta exitosamente
     case WStype_CONNECTED:
       {
-        IPAddress ip = webSocket.remoteIP(num);
-        Serial.printf("[%u] Connection from ", num);
-        Serial.println(ip.toString());
+        camera_fb_t * fb = esp_camera_fb_get(); // Obtener la imagen (parte de la solución para obtener la imagen más reciente)
+        esp_camera_fb_return(fb); //Liberar el búfer de fotogramas (parte de la solución para obtener la imagen más reciente)
 
-        //Experimental se supone que cuando se conecta
-        //un cliente pasa a esto
-        camera_fb_t * fb = NULL;
-        fb = esp_camera_fb_get(); // get image... part of work-around to get latest image
-        esp_camera_fb_return(fb); // return fb... part of work-around to get latest image
-
-        fb = NULL;
-        fb = esp_camera_fb_get(); // get fresh image
+        fb = esp_camera_fb_get(); //Obtener una imagen fresca
         size_t fbsize = fb->len;
         Serial.println(fbsize);
-        Serial.println("Image captured. Returning frame buffer data.");
-        webSocket.sendBIN(num, fb->buf, fbsize);
+        Serial.println("Imagen capturada. Enviando datos del búfer de fotogramas.");
+        webSocket.sendBIN(num, fb->buf, fbsize); //Envia los datos en binario
         esp_camera_fb_return(fb);
-        Serial.println("Done");
+        Serial.println("Listo");
       }
       break;
 
-    // Echo text message back to client
+    //En el caso de recibir un mensaje tipo texto del cliente
     case WStype_TEXT:
-      Serial.printf("[%u] Text: %s\n", num, payload);
+      Serial.printf("En el caso de recibir un mensaje de texto", num, payload);
       Serial.println((char*)payload);
-
-      //Cuando se recibe el mensaje capture
-      /*
-        if (String((char*)payload) == "capture")
-        {
-        Serial.println("Capture Command Received - capturing frame");
-
-        camera_fb_t * fb = NULL;
-        fb = esp_camera_fb_get(); // get image... part of work-around to get latest image
-        esp_camera_fb_return(fb); // return fb... part of work-around to get latest image
-
-        fb = NULL;
-        fb = esp_camera_fb_get(); // get fresh image
-        size_t fbsize = fb->len;
-        Serial.println(fbsize);
-        Serial.println("Image captured. Returning frame buffer data.");
-        webSocket.sendBIN(num, fb->buf, fbsize);
-        esp_camera_fb_return(fb);
-        Serial.println("Done");
-        }
-
-        else
-        {
-        webSocket.sendTXT(num, payload);
-        }
-      */
       break;
 
-    // For everything else: do nothing
+    //En el caso de recibir datos en binario del cliente
     case WStype_BIN:
-    // Serial.printf("[%u] get binary length: %u\n", num, length);
-    // hexdump(payload, length);
 
-    // send message to client
-    // webSocket.sendBIN(num, payload, length);
-    // break;
     case WStype_ERROR:
     case WStype_FRAGMENT_TEXT_START:
     case WStype_FRAGMENT_BIN_START:
@@ -1002,9 +963,6 @@ void WebSocketEvento(uint8_t num,
       break;
   }
 }
-
-
-
 
 void setup()
 {
@@ -1017,14 +975,16 @@ void setup()
   //Funcion establecer conexion WiFi
   ConectarWifi();
 
-  // Start WebSocket server and assign callback
+  //Empieza el servidor WebSocket
   webSocket.begin();
+
+  //Se esta definiendo una funcion callback que indica que accion se ejecutara cuando suceda un evento
   webSocket.onEvent(WebSocketEvento);
 }
 
 void loop()
 {
-  // Look for and handle WebSocket data
+  //Gestiona los eventos y procesa los datos en una conexión WebSocket
   webSocket.loop();
 }
 ```
