@@ -208,3 +208,5 @@ asyncio.run(ws_client())
 * ``` pip install websockets ```
 * ``` pip install aiofiles ```
 
+### Funcionamiento
+<img src="https://github.com/IDiegoUlises/Esp32-Cam-WebSocket-Enviar-Imagen-y-Python/blob/main/imagenes/WebSocketEsp32yPtython.jpg" />
