@@ -926,7 +926,7 @@ void WebSocketEvento(uint8_t num,
   {
     //Cuando un cliente se desconecta
     case WStype_DISCONNECTED:
-      Serial.println("Cliente desconectado", num);
+      Serial.println("Cliente desconectado");
       break;
 
     //Se ejecuta cuando un cliente se conecta exitosamente
