@@ -865,21 +865,21 @@ void ConectarWifi()
   Serial.print("Conectando ");
   Serial.println(ssid);
 
-  // Esperar hasta que la conexión sea exitosa
+  //Esperar hasta que la conexión sea exitosa
   while (WiFi.status() != WL_CONNECTED)
   {
     delay(500);
     Serial.print(".");
   }
 
-  // Mostrar la dirección IP asignada
+  //Mostrar la dirección IP asignada
   Serial.println("");
   Serial.println("WiFi conectado.");
   Serial.println("IP Direccion: ");
   Serial.println(WiFi.localIP());
 }
 
-// Configurar la cámara
+//Configurar la cámara
 void ConfigurarCamara()
 {
   camera_config_t config;
