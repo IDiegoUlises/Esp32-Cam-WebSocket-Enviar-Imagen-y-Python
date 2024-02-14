@@ -200,7 +200,7 @@ async def ws_client():
 asyncio.run(ws_client())
 ```
 ### Librerias en Python
-pip install websockets
-pip install aiofiles
+* ``` pip install websockets ```
+* ``` pip install aiofiles ```
 
 
