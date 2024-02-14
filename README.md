@@ -202,5 +202,5 @@ asyncio.run(ws_client())
 ### Librerias Necesarias Para Python
 * ``` pip install websockets ```
 * ``` pip install aiofiles ```
-
+* ``` pip install asyncio ```
 
